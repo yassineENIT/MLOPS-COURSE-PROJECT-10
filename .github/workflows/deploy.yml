@@ -29,17 +29,17 @@ jobs:
               with:
                   credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-            # ✅ AJOUT: installe les composants gcloud nécessaires (kubectl + plugin GKE)
-            - name: Setup gcloud components
+            - name: Setup gcloud components (APT)
               run: |
-                  gcloud components install kubectl gke-gcloud-auth-plugin --quiet
+                  apt-get update
+                  apt-get install -y kubectl google-cloud-cli-gke-gcloud-auth-plugin
+                  apt-get clean
 
             - name: Configure GCloud
               run: |
                   gcloud config set project $PROJECT_ID
                   gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
 
-            # ✅ AJOUT: fallback Cloud Build si docker n'est pas présent dans le container
             - name: Building and Pushing Image
               run: |
                   if command -v docker >/dev/null 2>&1; then
