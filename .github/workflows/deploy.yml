@@ -29,18 +29,32 @@ jobs:
               with:
                   credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+            # ✅ AJOUT: installe les composants gcloud nécessaires (kubectl + plugin GKE)
+            - name: Setup gcloud components
+              run: |
+                  gcloud components install kubectl gke-gcloud-auth-plugin --quiet
+
             - name: Configure GCloud
               run: |
                   gcloud config set project $PROJECT_ID
-                  gcloud auth configure-docker europe-west1-docker.pkg.dev
+                  gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+
+            # ✅ AJOUT: fallback Cloud Build si docker n'est pas présent dans le container
             - name: Building and Pushing Image
               run: |
-                  docker build -t $IMAGE:$GITHUB_SHA .
-                  docker push $IMAGE:$GITHUB_SHA
+                  if command -v docker >/dev/null 2>&1; then
+                    echo "Docker trouvé: build/push local"
+                    docker build -t $IMAGE:$GITHUB_SHA .
+                    docker push $IMAGE:$GITHUB_SHA
+                  else
+                    echo "Docker absent: build/push avec Cloud Build"
+                    gcloud builds submit --tag $IMAGE:$GITHUB_SHA --project $PROJECT_ID
+                  fi
 
             - name: GKE Configuration
               run: |
                   gcloud container clusters get-credentials $GKE_CLUSTER --region $GKE_REGION --project $PROJECT_ID
+
             - name: Deploy to Kubernetes
               run: |
                   kubectl apply -f kubernetes-deployment.yml
