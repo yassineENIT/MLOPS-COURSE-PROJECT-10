@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prédiction Iris</title>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'ui-sans-serif', 'system-ui'] }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Petit effet "shine" sur le bouton */
+    .shine {
+      position: relative;
+      overflow: hidden;
+    }
+    .shine::after {
+      content: "";
+      position: absolute;
+      top: 0; left: -150%;
+      width: 120%; height: 100%;
+      transform: skewX(-20deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      transition: left .7s ease;
+    }
+    .shine:hover::after { left: 150%; }
+    /* Animation douce en entrée */
+    .fade-up {
+      animation: fadeUp .6s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px) scale(0.995); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    /* Flottant pour unités */
+    .unit span {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen font-inter bg-gradient-to-br from-indigo-50 via-sky-50 to-emerald-50 text-slate-800">
+  <!-- Blobs décoratifs -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-indigo-300/30 blur-3xl"></div>
+    <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-emerald-300/30 blur-3xl"></div>
+  </div>
+
+  <main class="container mx-auto px-4 py-10">
+    <header class="text-center mb-8 fade-up">
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+        Prédire l’espèce d’<span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-emerald-600">Iris</span>
+      </h1>
+      <p class="mt-2 text-slate-600">Entre les longueurs et largeurs (en cm), clique et regarde la magie ✨</p>
+    </header>
+
+    <section class="max-w-3xl mx-auto fade-up">
+      <div class="relative rounded-3xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-2xl">
+        <div class="absolute inset-0 rounded-3xl bg-gradient-to-tr from-white/30 to-transparent"></div>
+
+        <div class="relative p-6 md:p-8">
+          <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Sepal Length -->
+            <div class="group">
+              <label for="SepalLengthCm" class="block text-sm font-medium text-slate-700 mb-1">
+                Longueur sépale (cm)
+              </label>
+              <div class="unit relative">
+                <input
+                  type="number" step="any" id="SepalLengthCm" name="SepalLengthCm"
+                  value="{{ request.form.get('SepalLengthCm','') }}"
+                  placeholder="ex: 5.1"
+                  class="w-full rounded-xl border border-slate-200 bg-white/80 focus:bg-white px-4 py-3 pr-14 shadow-sm outline-none focus:ring-4 ring-indigo-100 transition" />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wider text-slate-500">cm</span>
+              </div>
+            </div>
+
+            <!-- Sepal Width -->
+            <div class="group">
+              <label for="SepalWidthCm" class="block text-sm font-medium text-slate-700 mb-1">
+                Largeur sépale (cm)
+              </label>
+              <div class="unit relative">
+                <input
+                  type="number" step="any" id="SepalWidthCm" name="SepalWidthCm"
+                  value="{{ request.form.get('SepalWidthCm','') }}"
+                  placeholder="ex: 3.5"
+                  class="w-full rounded-xl border border-slate-200 bg-white/80 focus:bg-white px-4 py-3 pr-14 shadow-sm outline-none focus:ring-4 ring-indigo-100 transition" />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wider text-slate-500">cm</span>
+              </div>
+            </div>
+
+            <!-- Petal Length -->
+            <div class="group">
+              <label for="PetalLengthCm" class="block text-sm font-medium text-slate-700 mb-1">
+                Longueur pétale (cm)
+              </label>
+              <div class="unit relative">
+                <input
+                  type="number" step="any" id="PetalLengthCm" name="PetalLengthCm"
+                  value="{{ request.form.get('PetalLengthCm','') }}"
+                  placeholder="ex: 1.4"
+                  class="w-full rounded-xl border border-slate-200 bg-white/80 focus:bg-white px-4 py-3 pr-14 shadow-sm outline-none focus:ring-4 ring-indigo-100 transition" />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wider text-slate-500">cm</span>
+              </div>
+            </div>
+
+            <!-- Petal Width -->
+            <div class="group">
+              <label for="petalWidthCm" class="block text-sm font-medium text-slate-700 mb-1">
+                Largeur pétale (cm)
+              </label>
+              <div class="unit relative">
+                <!-- IMPORTANT: le name doit être exactement 'petalWidthCm' -->
+                <input
+                  type="number" step="any" id="petalWidthCm" name="petalWidthCm"
+                  value="{{ request.form.get('petalWidthCm','') }}"
+                  placeholder="ex: 0.2"
+                  class="w-full rounded-xl border border-slate-200 bg-white/80 focus:bg-white px-4 py-3 pr-14 shadow-sm outline-none focus:ring-4 ring-indigo-100 transition" />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wider text-slate-500">cm</span>
+              </div>
+            </div>
+
+            <div class="md:col-span-2 flex flex-wrap items-center gap-3 pt-2">
+              <button type="submit"
+                      class="shine inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-600 px-6 py-3 text-white font-semibold shadow-lg shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.99] transition">
+                🔮 Lancer la prédiction
+              </button>
+              <button type="reset"
+                      class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white/70 px-5 py-3 font-medium text-slate-700 hover:bg-white transition">
+                Réinitialiser
+              </button>
+              <span class="text-xs text-slate-500">Modèle : <code>artifacts/models/model.pkl</code></span>
+            </div>
+          </form>
+
+          <!-- Astuces / Rappels -->
+          <details class="mt-6 rounded-xl border border-slate-200 bg-white/60 p-4 open:shadow-md transition">
+            <summary class="cursor-pointer select-none font-semibold text-slate-800">Aide rapide</summary>
+            <ul class="mt-3 list-disc pl-5 text-sm text-slate-600 space-y-1">
+              <li>Valeurs typiques : sépales ~ (4.3–7.9) cm, pétales ~ (1.0–6.9) cm.</li>
+              <li>Assure-toi d’utiliser des <strong>centimètres</strong>.</li>
+              <li>Le bouton ci-dessus déclenche <code>model.predict()</code> côté serveur.</li>
+            </ul>
+          </details>
+
+          <!-- Résultat -->
+          {% if prediction is not none %}
+            {% set species = (prediction|string) %}
+            {% set badge_bg = 'bg-sky-100' %}
+            {% set badge_txt = 'text-sky-800' %}
+            {% set ring_col = 'ring-sky-200' %}
+            {% if species|lower in ['setosa','iris-setosa','setosa (iris)'] %}
+              {% set badge_bg = 'bg-emerald-100' %}
+              {% set badge_txt = 'text-emerald-800' %}
+              {% set ring_col = 'ring-emerald-200' %}
+            {% elif species|lower in ['versicolor','iris-versicolor'] %}
+              {% set badge_bg = 'bg-amber-100' %}
+              {% set badge_txt = 'text-amber-800' %}
+              {% set ring_col = 'ring-amber-200' %}
+            {% elif species|lower in ['virginica','iris-virginica'] %}
+              {% set badge_bg = 'bg-violet-100' %}
+              {% set badge_txt = 'text-violet-800' %}
+              {% set ring_col = 'ring-violet-200' %}
+            {% endif %}
+
+            <div class="mt-8 rounded-2xl border border-slate-200 bg-white/80 p-5 ring-4 {{ ring_col }} transition">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-sm uppercase tracking-wider text-slate-500">Résultat du modèle</p>
+                  <h2 class="mt-1 text-2xl font-extrabold">Prédiction</h2>
+                </div>
+                <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold border {{ badge_bg }} {{ badge_txt }} border-white/0 shadow-sm">
+                  {{ species }}
+                </span>
+              </div>
+
+              <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-600">
+                <div class="rounded-xl bg-slate-50/80 p-3">
+                  <span class="block text-xs text-slate-500">Entrées utilisées</span>
+                  <span class="block mt-1 font-medium">
+                    SL: {{ request.form.get('SepalLengthCm','—') }} cm • SW: {{ request.form.get('SepalWidthCm','—') }} cm
+                  </span>
+                  <span class="block font-medium">
+                    PL: {{ request.form.get('PetalLengthCm','—') }} cm • PW: {{ request.form.get('petalWidthCm','—') }} cm
+                  </span>
+                </div>
+                <div class="rounded-xl bg-slate-50/80 p-3">
+                  <span class="block text-xs text-slate-500">Interprétation rapide</span>
+                  <span class="block mt-1">
+                    Espèce la plus probable selon le modèle entraîné sur Iris.
+                  </span>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <footer class="text-center text-xs text-slate-500 mt-6">
+        Fait avec ❤️ pour Flask & scikit-learn
+      </footer>
+    </section>
+  </main>
+</body>
+</html>
