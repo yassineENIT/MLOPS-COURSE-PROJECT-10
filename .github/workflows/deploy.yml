@@ -29,10 +29,13 @@ jobs:
               with:
                   credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-            - name: Setup gcloud components (APT)
+            # Install kubectl + GKE auth plugin via APT (component manager désactivé dans cette image)
+            - name: Setup kubectl & GKE auth plugin (APT)
               run: |
                   apt-get update
-                  apt-get install -y kubectl google-cloud-cli-gke-gcloud-auth-plugin
+                  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+                    kubectl \
+                    google-cloud-cli-gke-gcloud-auth-plugin
                   apt-get clean
 
             - name: Configure GCloud
@@ -40,6 +43,7 @@ jobs:
                   gcloud config set project $PROJECT_ID
                   gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
 
+            # Build & Push : si docker existe, on l'utilise; sinon fallback Cloud Build
             - name: Building and Pushing Image
               run: |
                   if command -v docker >/dev/null 2>&1; then
@@ -58,4 +62,5 @@ jobs:
             - name: Deploy to Kubernetes
               run: |
                   kubectl apply -f kubernetes-deployment.yml
+                  # Assure-toi que le nom du conteneur dans ton Deployment est bien "mlops-app"
                   kubectl set image deployment/$DEPLOYMENT_NAME $DEPLOYMENT_NAME=$IMAGE:$GITHUB_SHA
